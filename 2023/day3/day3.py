@@ -1,6 +1,9 @@
 #part 1: 527446
+#part 2: 73201705
 
 import re
+from functools import reduce
+from operator import mul as multiply, add
 from enum import Enum
 
 symbols = '*-@/+%$=&#'
@@ -78,4 +81,14 @@ if __name__ == '__main__':
 		for idx, member in members.items():
 			if member.type == MemberType.NUMBER and any([adj.type == MemberType.SYMBOL for adj in member.get_adjacents()]):
 				sum += member.value
+	print(sum)
+
+	# part 2
+	sum = 0
+	for line_num, members in member_lookup.lookup.items():
+		for idx, member in members.items():
+			if member.value == '*':
+				adj_nums = [adj for adj in member.get_adjacents() if adj.type == MemberType.NUMBER]
+				if len(adj_nums) == 2:
+					sum += reduce(multiply, [num.value for num in adj_nums], 1)
 	print(sum)
