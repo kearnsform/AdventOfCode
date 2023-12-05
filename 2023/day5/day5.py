@@ -9,11 +9,13 @@ class RangeMap():
         self.lookup = {}
 
     def add_range(self, src_start, dest_start, length):
-        for i in range(length):
-            self.lookup[src_start + i] = dest_start + i
+        self.lookup[src_start] = (dest_start, length)
 
     def get(self, src):
-        return self.lookup.get(src, src)
+        for k, v in self.lookup.items():
+            if src >= k and src - k < v[1]:
+                return (src - k) + v[0]
+        return src
 
 
 class SuperMap():
