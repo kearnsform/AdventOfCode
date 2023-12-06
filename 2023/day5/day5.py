@@ -4,6 +4,7 @@ from functools import reduce
 import time
 
 #Part1: 340994526
+#Part2: 52210644 ?
 
 class RangeMap():
     def __init__(self, src_name, dest_name):
@@ -24,40 +25,40 @@ class RangeMap():
         partitions = set()
         partitions.add(0)
         partitions.update(self.lookup.keys())
-        partitions.update([k + v[1] for k,v in self.lookup])
+        partitions.update([k + v[1] for k,v in self.lookup.items()])
         return partitions
 
     def get_preimage(self, nums):
         preimage = set()
-        #ToDo
-        #For each range, if num is in image of range, collect the inverse of num
-        #need to include the holes in the ranges
-            #if num not found in explicit ranges domain, then add num itself to preimage?
+        for n in nums:
+            for k, v in self.lookup.items():
+                if v[0] <= n < v[0] + v[1]:
+                    inverse = n - (v[0] - k)
+                    preimage.add(inverse)
+                    break
+            else:
+                preimage.add(n)
         return preimage
 
 
 class SuperMap():
     def __init__(self):
-        self.lookup = {}
+        self.lookup = []
 
     def add(self, range_map):
-        self.lookup[range_map.src_name] = range_map
+        self.lookup.append(range_map)
 
-    def get(self, src_name, src):
-        inner_map = self.lookup.get(src_name, None)
-        if not inner_map:
-            return None
-        return inner_map.get(src), inner_map.dest_name
+    def recur_get(self, src):
+        for inner_map in self.lookup:
+            src = inner_map.get(src)
+        return src
 
-    def recur_get(self, src_name, src):
-        while True:
-            result = self.get(src_name, src)
-            if result:
-                src, src_name = result[0], result[1]
-            else:
-                return src, src_name
-
-
+    def get_all_partitions(self):
+        partitions = list(reversed(self.lookup))[0].get_partitions()
+        for m in list(reversed(self.lookup))[1:]:
+            partitions.update(m.get_preimage(partitions))
+            partitions.update(m.get_partitions())
+        return partitions
 
 
 def build_SuperMap():
@@ -78,26 +79,36 @@ def build_SuperMap():
         sm.add(inner_map)
     return sm
 
+
 print('Part 1:')
 start = time.time()
 sm = build_SuperMap()
 with open('input.txt', 'r') as file:
     seeds = [int(n) for n in file.readline().split()[1:]]
-print(reduce(min, [sm.recur_get('seed', n)[0] for n in seeds]))
+print(reduce(min, [sm.recur_get(n) for n in seeds]))
 end = time.time()
 print(f'Duration: {end - start}')
 
-sys.exit()
+#sys.exit()
 
 print('Part 2:')
-# Would take 4 hours to do the computation with standard approach
 start = time.time()
-#sm = build_SuperMap()
-#with open('input.txt', 'r') as file:
-#    seeds = [int(n) for n in file.readline().split()[1:]]
-_min = 1000000000000
-for n in range(564468486, 564468486+1000000):
-    _min = min(sm.recur_get('seed', n)[0], _min)
-print(_min)
+partitions = sm.get_all_partitions()
+
+#parse the seeds
+new_seeds = []
+for i in range(0, len(seeds), 2):
+    begin = seeds[i]
+    size = seeds[i + 1]
+    new_seeds.append((begin, size))
+
+nums_to_check = [n[0] for n in new_seeds]
+#Add partitions that are in range
+for p in partitions:
+    for begin, size in new_seeds:
+        if begin <= p < begin + size:
+            nums_to_check.append(p)
+
+print(reduce(min, [sm.recur_get(n) for n in nums_to_check]))
 end = time.time()
 print(f'Duration: {end - start}')
