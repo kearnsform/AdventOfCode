@@ -1,5 +1,6 @@
 import sys
 import re
+import time
 
 class Instructions():
     def __init__(self, instr_str):
@@ -7,7 +8,7 @@ class Instructions():
         self.step_count = 0
 
     def next(self):
-        step_idx = self.step_count % (len(self.instr_str) - 1)
+        step_idx = self.step_count % len(self.instr_str.strip())
         self.step_count += 1
         return self.instr_str[step_idx]
 
@@ -38,5 +39,27 @@ def all_end_in_z(nodes):
 nodes = [node for node in desert_map.lookup.keys() if node[-1] == 'A']
 while not all_end_in_z(nodes):
     nodes = desert_map.get(nodes, instructions.next())
+
+print(instructions.step_count)
+#print(71*43*47*73*59*61*283) #10668805667831
+#162 days to compute
+
+
+
+sys.exit()
+#Run some queries on the data to understand the pattern
+nodes = [node for node in desert_map.lookup.keys() if node[-1] == 'A']
+nodes = [nodes[5]]
+print(nodes)
+
+while True:
+    nodes = desert_map.get(nodes, instructions.next())
+    if all_end_in_z(nodes):
+        print(nodes)
+        print(f'Count: {instructions.step_count}')
+        step_idx = instructions.step_count % len(instructions.instr_str.strip())
+        print(f'Iter: {instructions.step_count / len(instructions.instr_str.strip())}')
+        print(f'Idx: {step_idx}')
+        time.sleep(5)
 
 print(instructions.step_count)
