@@ -2,19 +2,6 @@ import json
 import sys
 
 
-#An "edge" is any line segment on the boundary of a Tile
-#An edge is either outside the pipe, on the pipe, or inside the pipe
-#Any edge on the outside boundary of the grid is considered "outside"
-#Any edge that sits between two linked pipe tiles are on the pipe
-#Any edge that is not on the pipe but is connected to an outside edge is also outside
-#Any edge that is not on the pipe and not outside, is inside
-
-#Every Tile either borders at least one outside edge or at least one inside edge, but cannot border both
-#A Tile that borders an outside edge is considered outside
-#A Tile that is not outside, is inside
-
-
-
 def add_tuple(t1, t2):
     return tuple(map(sum, zip(t1, t2)))
 
@@ -35,6 +22,7 @@ class Tile():
         self.col = col
         self.char = char
         self.grid = grid
+        self.is_pipe = grid.is_pipe(row, col)
 
     def __eq__(self, other):
         if other == None:
@@ -87,6 +75,8 @@ class Grid():
             for line in file:
                 self._grid.append(line.strip())
         self.start_location = self._findS()
+        self.pipe = {}
+        self._find_pipe()
 
     def _findS(self):
         for i, row in enumerate(self._grid):
@@ -97,19 +87,56 @@ class Grid():
         sym = safe_list_get(safe_list_get(self._grid, row, ''), col, None)
         return Tile(row, col, sym, self)
 
+    def _find_pipe(self):
+        prev = None
+        curr = self.get_start()
+        self.pipe[(curr.row, curr.col)] = curr
+        nxt = curr.get_path_next(prev)
+        while nxt.char != 'S':
+            self.pipe[(nxt.row, nxt.col)] = nxt
+            prev = curr
+            curr = nxt
+            nxt = curr.get_path_next(prev)
+
+
+    def is_pipe(self, row, col):
+        return (row, col) in self.pipe.keys()
+
     def get_start(self):
         return self.get(self.start_location[0], self.start_location[1])
 
-grid = Grid()
-prev = None
-curr = grid.get_start()
-nxt = curr.get_path_next(prev)
-count = 1
-while nxt.char != 'S':
-    count += 1
-    prev = curr
-    curr = nxt
-    nxt = curr.get_path_next(prev)
 
+class EnclosedTracker():
+    def __init__(self):
+        self.pipe_down = False
+        self.pipe_up = False
+
+    def toggle_up(self):
+        self.pipe_up = True if self.pipe_up == False else False
+
+    def toggle_down(self):
+        self.pipe_down = True if self.pipe_down == False else False
+
+    def is_enclosed(self):
+        return self.pipe_up and self.pipe_down
+
+
+grid = Grid()
+count = len(grid.pipe)
 furthest = int(count/2)
-print(furthest)
+print(f'Part 1: {furthest}')
+
+count = 0
+for row_idx, row in enumerate(grid._grid):
+    tracker = EnclosedTracker()
+    for col_idx, t in enumerate(row):
+        tile = grid.get(row_idx, col_idx)
+        if tile.is_pipe:
+            if tile.char in ['|', 'L', 'J']:
+                tracker.toggle_up()
+            if tile.char in ['|', '7', 'F']:
+                tracker.toggle_down()
+        elif tracker.is_enclosed():
+            count += 1
+
+print(f'Part 2: {count}')
