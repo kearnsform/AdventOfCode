@@ -4,6 +4,11 @@ def get_transposed(pattern):
 
 def find_row_reflection(pattern):
     for i in range(len(pattern) - 1):
+        if is_reflection(pattern, i):
+            return i + 1
+
+def find_row_reflection_with_smudge(pattern):
+    for i in range(len(pattern) - 1):
         if is_almost_reflection(pattern, i):
             return i + 1
 
@@ -37,6 +42,12 @@ def get_value(pattern):
         return 100 * row_val
     return find_row_reflection(get_transposed(pattern))
 
+def get_value_with_smudge(pattern):
+    row_val = find_row_reflection_with_smudge(pattern)
+    if row_val:
+        return 100 * row_val
+    return find_row_reflection_with_smudge(get_transposed(pattern))
+
 with open('input.txt', 'r') as file:
     _sum = 0
     pattern = []
@@ -47,7 +58,19 @@ with open('input.txt', 'r') as file:
             continue
         pattern.append(line.strip())
     _sum += get_value(pattern)
-    print(_sum)
+    print(f'Part 1:{_sum}')
+
+with open('input.txt', 'r') as file:
+    _sum = 0
+    pattern = []
+    for line in file:
+        if line.strip() == '':
+            _sum += get_value_with_smudge(pattern)
+            pattern = []
+            continue
+        pattern.append(line.strip())
+    _sum += get_value_with_smudge(pattern)
+    print(f'Part 2:{_sum}')
 
 
 #1: 37025
